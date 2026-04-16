@@ -1,0 +1,22 @@
+{
+  "name": "ImageAI — مولّد صور مجاني",
+  "short_name": "ImageAI",
+  "description": "توليد صور بالذكاء الاصطناعي مجاناً عبر Hugging Face",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#080b14",
+  "theme_color": "#080b14",
+  "lang": "ar",
+  "dir": "rtl",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

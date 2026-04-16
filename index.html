@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+  <meta name="theme-color" content="#080b14"/>
+  <meta name="description" content="مولّد صور ذكاء اصطناعي مجاني — Hugging Face"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="ImageAI"/>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="icon" href="icon.svg"/>
+  <link rel="apple-touch-icon" href="icon.svg"/>
+  <title>ImageAI — مولّد صور مجاني</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+/* ===== RESET & BASE ===== */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#080b14;
+  --bg2:#0c1120;
+  --bg3:#101828;
+  --card:#131d2e;
+  --card2:#1a2540;
+  --border:#1e2d47;
+  --border2:#263554;
+  --accent:#4f8ef7;
+  --accent2:#7c3aed;
+  --gold:#f5c842;
+  --green:#22d3a0;
+  --red:#f87171;
+  --text:#e8edf5;
+  --text2:#8fa3c0;
+  --text3:#4a6180;
+  --radius:14px;
+  --font:'Tajawal',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+html,body{height:100%;overflow-x:hidden;background:var(--bg);color:var(--text);font-family:var(--font);direction:rtl}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+/* ===== COMPONENTS ===== */
+.screen{min-height:100dvh;display:flex;flex-direction:column}
+.page{flex:1;overflow-y:auto;padding:12px 14px 100px;-webkit-overflow-scrolling:touch}
+
+/* Header */
+.header{
+  position:sticky;top:0;z-index:50;
+  background:rgba(8,11,20,0.92);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  padding:12px 14px;
+  padding-top:calc(12px + env(safe-area-inset-top,0px));
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+.logo{display:flex;align-items:center;gap:8px}
+.logo-icon{
+  width:38px;height:38px;border-radius:11px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+  box-shadow:0 0 18px rgba(79,142,247,.3);
+}
+.logo-text{font-size:15px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+.logo-sub{font-size:10px;color:var(--text3);margin-top:1px}
+
+/* Status badge */
+.badge{
+  display:flex;align-items:center;gap:5px;
+  padding:5px 10px;border-radius:20px;font-size:11px;font-weight:700;
+  border:1px solid;cursor:pointer;transition:all .2s;
+}
+.badge-connected{background:rgba(34,211,160,.08);border-color:rgba(34,211,160,.2);color:var(--green)}
+.badge-disconnected{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.2);color:var(--red)}
+.dot{width:6px;height:6px;border-radius:50%}
+.dot-green{background:var(--green);box-shadow:0 0 6px var(--green)}
+.dot-red{background:var(--red)}
+
+/* Nav tabs */
+.nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:50;
+  background:rgba(8,11,20,0.95);backdrop-filter:blur(16px);
+  border-top:1px solid var(--border);
+  display:flex;
+  padding-bottom:env(safe-area-inset-bottom,8px);
+}
+.nav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  padding:10px 4px 8px;border:none;background:none;cursor:pointer;
+  color:var(--text3);font-family:var(--font);transition:all .2s;
+}
+.nav-btn.active{color:var(--accent)}
+.nav-btn .nav-icon{font-size:20px;margin-bottom:3px;transition:transform .2s}
+.nav-btn.active .nav-icon{transform:scale(1.1)}
+.nav-btn span{font-size:10px;font-weight:700}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.card+.card{margin-top:10px}
+
+/* Section label */
+.label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.label-num{
+  width:18px;height:18px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:900;color:#fff;
+}
+
+/* Input */
+.inp{
+  width:100%;background:var(--bg2);
+  border:1px solid var(--border2);border-radius:10px;
+  padding:12px 14px;color:var(--text);
+  font-size:14px;font-family:var(--font);
+  outline:none;transition:border .2s,box-shadow .2s;direction:rtl;
+}
+.inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,142,247,.12)}
+.inp::placeholder{color:var(--text3)}
+.inp-mono{font-family:var(--mono);font-size:12px;direction:ltr;text-align:left}
+textarea.inp{resize:none;line-height:1.7}
+
+/* Buttons */
+.btn{
+  border:none;cursor:pointer;font-family:var(--font);font-weight:700;
+  border-radius:10px;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px;
+}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+.btn-primary{
+  background:linear-gradient(135deg,var(--accent),#2563eb);
+  color:#fff;padding:14px 20px;font-size:15px;width:100%;
+  box-shadow:0 4px 20px rgba(79,142,247,.25);
+}
+.btn-primary:hover:not(:disabled){box-shadow:0 4px 28px rgba(79,142,247,.4);transform:translateY(-1px)}
+.btn-sm{padding:7px 14px;font-size:12px;background:var(--card2);color:var(--text2);border:1px solid var(--border2)}
+.btn-sm:hover{background:var(--border2);color:var(--text)}
+.btn-danger{background:rgba(248,113,113,.1);color:var(--red);border:1px solid rgba(248,113,113,.2);padding:6px 12px;font-size:12px}
+
+/* Model chips */
+.model-list{display:flex;flex-direction:column;gap:8px}
+.model-chip{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:12px 14px;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;gap:10px;
+}
+.model-chip.selected{border-color:rgba(79,142,247,.5);background:rgba(79,142,247,.06)}
+.model-chip:hover:not(.selected){border-color:var(--border2);background:var(--card2)}
+.model-chip-info{flex:1;min-width:0}
+.model-chip-name{font-size:14px;font-weight:700;color:var(--text)}
+.model-chip-desc{font-size:11px;color:var(--text3);margin-top:2px}
+.model-chip-id{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;text-align:left}
+.model-chip-badge{
+  font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;
+  background:rgba(34,211,160,.1);color:var(--green);border:1px solid rgba(34,211,160,.2);
+  white-space:nowrap;
+}
+.model-chip-badge.custom{background:rgba(124,58,237,.1);color:#a78bfa;border-color:rgba(124,58,237,.2)}
+
+/* Info boxes */
+.info-box{border-radius:10px;padding:12px 14px;font-size:12px;line-height:1.7}
+.info-blue{background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.15);color:#93bbfd}
+.info-green{background:rgba(34,211,160,.06);border:1px solid rgba(34,211,160,.15);color:#6ee7cb}
+.info-yellow{background:rgba(245,200,66,.06);border:1px solid rgba(245,200,66,.15);color:#fde68a}
+
+/* Modal */
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;
+  display:flex;align-items:flex-end;justify-content:center;
+  padding:0 0 env(safe-area-inset-bottom,0px);
+}
+.modal{
+  background:var(--bg3);border:1px solid var(--border2);
+  border-radius:20px 20px 0 0;padding:20px 18px 24px;
+  width:100%;max-width:520px;max-height:90dvh;overflow-y:auto;
+}
+.modal-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 16px}
+.modal-title{font-size:16px;font-weight:800;color:var(--text);margin-bottom:16px}
+
+/* Image display */
+.img-wrap{
+  border-radius:14px;overflow:hidden;
+  border:1px solid var(--border);
+  background:var(--bg2);
+  aspect-ratio:1;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+}
+.img-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.img-placeholder{text-align:center;padding:40px 20px;color:var(--text3)}
+.img-placeholder .icon{font-size:52px;margin-bottom:12px;opacity:.5}
+.img-placeholder p{font-size:13px;line-height:1.7}
+.img-actions{display:flex;gap:8px;margin-top:10px}
+
+/* Generating animation */
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skeleton{
+  background:linear-gradient(90deg,var(--bg2) 25%,var(--card2) 50%,var(--bg2) 75%);
+  background-size:200% 100%;
+  animation:shimmer 1.5s infinite;
+  border-radius:14px;
+}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.generating-state{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;
+  background:rgba(8,11,20,.85);
+}
+.gen-icon{font-size:48px;animation:float 2s infinite}
+.gen-text{font-size:14px;font-weight:700;color:var(--text2)}
+.gen-sub{font-size:11px;color:var(--text3)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.pulse{animation:pulse .9s infinite}
+
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.slide-up{animation:slideUp .3s ease}
+
+/* Step connector */
+.steps{display:flex;flex-direction:column;gap:12px}
+.step{display:flex;gap:12px}
+.step-line{display:flex;flex-direction:column;align-items:center;gap:0}
+.step-dot{
+  width:28px;height:28px;border-radius:50%;min-width:28px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:900;color:#fff;
+}
+.step-connector{width:2px;flex:1;background:var(--border);min-height:16px}
+.step-content{flex:1;padding-bottom:12px}
+.step-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
+.step-desc{font-size:12px;color:var(--text2);line-height:1.7}
+
+/* Range */
+input[type=range]{accent-color:var(--accent);width:100%;cursor:pointer}
+
+/* Progress bar */
+.progress-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:8px}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width .3s}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:calc(70px + env(safe-area-inset-bottom,0px));
+  left:50%;transform:translateX(-50%) translateY(10px);
+  background:var(--card2);border:1px solid var(--border2);
+  border-radius:20px;padding:9px 18px;font-size:13px;
+  white-space:nowrap;z-index:200;opacity:0;
+  transition:all .25s;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Responsive */
+@media(min-width:600px){
+  .page{max-width:520px;margin:0 auto}
+  .nav{max-width:520px;left:50%;transform:translateX(-50%)}
+  .header{max-width:100%}
+  .modal{border-radius:20px;margin:20px;max-height:80dvh}
+  .overlay{align-items:center}
+}
+</style>
+</head>
+<body>
+<div class="screen" id="app">
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">🎨</div>
+      <div>
+        <div class="logo-text">ImageAI</div>
+        <div class="logo-sub">مولّد صور مجاني</div>
+      </div>
+    </div>
+    <div id="header-status"></div>
+  </div>
+
+  <!-- Pages -->
+  <div class="page" id="page-generate" style="display:none"></div>
+  <div class="page" id="page-models" style="display:none"></div>
+  <div class="page" id="page-guide" style="display:none"></div>
+
+  <!-- Bottom Nav -->
+  <nav class="nav">
+    <button class="nav-btn" id="nav-generate" onclick="switchTab('generate')">
+      <span class="nav-icon">✨</span>
+      <span>توليد</span>
+    </button>
+    <button class="nav-btn" id="nav-models" onclick="switchTab('models')">
+      <span class="nav-icon">🧠</span>
+      <span>النماذج</span>
+    </button>
+    <button class="nav-btn" id="nav-guide" onclick="switchTab('guide')">
+      <span class="nav-icon">📖</span>
+      <span>الدليل</span>
+    </button>
+  </nav>
+</div>
+
+<!-- Modals -->
+<div class="overlay" id="modal-key" style="display:none" onclick="if(event.target===this&&APP.key)closeModal('modal-key')">
+  <div class="modal slide-up">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🔑 إعداد مفتاح API</div>
+    <div class="steps" style="margin-bottom:16px">
+      <div class="step">
+        <div class="step-line"><div class="step-dot">1</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">أنشئ حساباً مجانياً</div>
+          <div class="step-desc">اذهب إلى <a href="https://huggingface.co/join" target="_blank" style="color:var(--accent)">huggingface.co/join</a> وسجّل بالبريد الإلكتروني — مجاني تماماً</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"><div class="step-dot">2</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">أنشئ مفتاح API</div>
+          <div class="step-desc">اذهب إلى <a href="https://huggingface.co/settings/tokens" target="_blank" style="color:var(--accent)">huggingface.co/settings/tokens</a><br>اضغط <strong>"New token"</strong> → اختر <strong>"Read"</strong> أو <strong>"Fine-grained"</strong> ← انسخ المفتاح</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"><div class="step-dot">3</div></div>
+        <div class="step-content">
+          <div class="step-title">الصقه هنا</div>
+          <div class="step-desc">المفتاح يبدأ بـ <code style="background:var(--bg2);padding:1px 5px;border-radius:4px;font-family:var(--mono)">hf_</code> ويُحفظ فقط في متصفحك</div>
+        </div>
+      </div>
+    </div>
+    <div class="info-yellow" style="margin-bottom:12px;font-size:12px">
+      ⚡ يعمل أيضاً مع مفاتيح <strong>Stability AI</strong> و <strong>Replicate</strong> — فقط أدخل المفتاح وسيتعرف عليه التطبيق تلقائياً
+    </div>
+    <div class="label">المفتاح</div>
+    <input class="inp inp-mono" id="key-input" type="password" placeholder="hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" style="margin-bottom:10px"/>
+    <div id="key-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" onclick="saveKey()" style="flex:1">💾 حفظ المفتاح</button>
+      <button id="key-clear-btn" class="btn btn-sm" onclick="clearKey()" style="display:none">حذف</button>
+    </div>
+    <div class="info-green" style="margin-top:12px;font-size:11px">
+      🔒 المفتاح يُخزّن فقط في <strong>localStorage</strong> داخل متصفحك — لا يُرسل لأي خادم آخر غير Hugging Face مباشرةً
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-add-model" style="display:none" onclick="if(event.target===this)closeModal('modal-add-model')">
+  <div class="modal slide-up">
+    <div class="modal-handle"></div>
+    <div class="modal-title">➕ إضافة نموذج مخصص</div>
+    <div class="info-blue" style="margin-bottom:14px;font-size:12px">
+      ابحث عن أي نموذج في <a href="https://huggingface.co/models?pipeline_tag=text-to-image&sort=likes" target="_blank" style="color:var(--accent)">huggingface.co/models</a> ← فلتر بـ <strong>Text-to-Image</strong> ← انسخ الـ ID من URL الصفحة
+    </div>
+    <div class="label">معرّف النموذج (Model ID) *</div>
+    <input class="inp inp-mono" id="new-id" placeholder="مثال: stabilityai/stable-diffusion-2-1" style="margin-bottom:10px"/>
+    <div class="label">اسم العرض *</div>
+    <input class="inp" id="new-name" placeholder="مثال: Stable Diffusion 2.1" style="margin-bottom:10px"/>
+    <div class="label">وصف مختصر</div>
+    <input class="inp" id="new-desc" placeholder="مثال: جودة عالية، أسرع من XL" style="margin-bottom:14px"/>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" onclick="addCustomModel()">إضافة النموذج</button>
+      <button class="btn btn-sm" onclick="closeModal('modal-add-model')">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// =====================
+//  APP STATE
+// =====================
+const APP = {
+  key: localStorage.getItem('img_api_key') || '',
+  selectedModel: localStorage.getItem('img_model') || 'black-forest-labs/FLUX.1-schnell',
+  customModels: JSON.parse(localStorage.getItem('img_custom_models') || '[]'),
+  prompt: '',
+  negPrompt: '',
+  width: 512,
+  height: 512,
+  steps: 20,
+  guidance: 7.5,
+  generating: false,
+  lastImage: localStorage.getItem('img_last') || '',
+  history: JSON.parse(localStorage.getItem('img_history') || '[]'),
+  tab: 'generate',
+  installPrompt: null,
+};
+
+// =====================
+//  BUILT-IN MODELS (verified & free)
+// =====================
+const BUILTIN_MODELS = [
+  {
+    id: 'black-forest-labs/FLUX.1-schnell',
+    name: 'FLUX.1 Schnell ⚡',
+    desc: 'الأسرع والأفضل — مرخّص Apache 2.0',
+    badge: 'مجاني',
+    link: 'https://huggingface.co/black-forest-labs/FLUX.1-schnell',
+    steps_default: 4,
+    guidance_default: 0,
+  },
+  {
+    id: 'black-forest-labs/FLUX.1-dev',
+    name: 'FLUX.1 Dev 🔥',
+    desc: 'جودة أعلى، أبطأ قليلاً — رائع للصور التفصيلية',
+    badge: 'مجاني',
+    link: 'https://huggingface.co/black-forest-labs/FLUX.1-dev',
+    steps_default: 20,
+    guidance_default: 3.5,
+  },
+  {
+    id: 'stabilityai/stable-diffusion-xl-base-1.0',
+    name: 'SDXL Base 1.0',
+    desc: 'Stable Diffusion XL — نماذج عالية الدقة',
+    badge: 'مجاني',
+    link: 'https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0',
+    steps_default: 30,
+    guidance_default: 7.5,
+  },
+  {
+    id: 'stabilityai/stable-diffusion-2-1',
+    name: 'Stable Diffusion 2.1',
+    desc: 'نموذج كلاسيكي موثوق وسريع',
+    badge: 'مجاني',
+    link: 'https://huggingface.co/stabilityai/stable-diffusion-2-1',
+    steps_default: 25,
+    guidance_default: 7.5,
+  },
+  {
+    id: 'Lykon/dreamshaper-8',
+    name: 'DreamShaper 8',
+    desc: 'رائع للشخصيات والمشاهد الخيالية',
+    badge: 'مجاني',
+    link: 'https://huggingface.co/Lykon/dreamshaper-8',
+    steps_default: 25,
+    guidance_default: 8,
+  },
+  {
+    id: 'runwayml/stable-diffusion-v1-5',
+    name: 'SD 1.5 (Classic)',
+    desc: 'الأخف والأسرع — مناسب للاختبار السريع',
+    badge: 'مجاني',
+    link: 'https://huggingface.co/runwayml/stable-diffusion-v1-5',
+    steps_default: 20,
+    guidance_default: 7.5,
+  },
+];
+
+function allModels(){ return [...BUILTIN_MODELS, ...APP.customModels]; }
+function getModel(){ return allModels().find(m=>m.id===APP.selectedModel) || BUILTIN_MODELS[0]; }
+
+// =====================
+//  PWA INSTALL
+// =====================
+window.addEventListener('beforeinstallprompt', e=>{
+  e.preventDefault(); APP.installPrompt = e;
+});
+
+// =====================
+//  KEY MANAGEMENT
+// =====================
+function detectKeyType(k){
+  if(k.startsWith('hf_')) return 'Hugging Face 🤗';
+  if(k.startsWith('sk-')) return 'Stability AI / OpenAI 🎨';
+  if(k.length > 20) return 'مفتاح API ✓';
+  return null;
+}
+
+function saveKey(){
+  const v = document.getElementById('key-input').value.trim();
+  const errEl = document.getElementById('key-error');
+  if(!v){ errEl.textContent='الرجاء إدخال المفتاح'; errEl.style.display='block'; return; }
+  if(v.length < 10){ errEl.textContent='المفتاح قصير جداً'; errEl.style.display='block'; return; }
+  errEl.style.display='none';
+  APP.key = v;
+  localStorage.setItem('img_api_key', v);
+  closeModal('modal-key');
+  renderHeader();
+  showToast('✅ تم حفظ المفتاح — ' + detectKeyType(v));
+}
+
+function clearKey(){
+  APP.key = '';
+  localStorage.removeItem('img_api_key');
+  closeModal('modal-key');
+  renderHeader();
+  showToast('🔑 تم حذف المفتاح');
+}
+
+function openKeyModal(){
+  const inp = document.getElementById('key-input');
+  inp.value = APP.key;
+  document.getElementById('key-clear-btn').style.display = APP.key ? 'flex' : 'none';
+  document.getElementById('key-error').style.display = 'none';
+  document.getElementById('modal-key').style.display = 'flex';
+}
+
+// =====================
+//  MODELS
+// =====================
+function addCustomModel(){
+  const id = document.getElementById('new-id').value.trim();
+  const name = document.getElementById('new-name').value.trim();
+  const desc = document.getElementById('new-desc').value.trim();
+  if(!id||!name){ showToast('⚠️ المعرف والاسم مطلوبان'); return; }
+  if(allModels().some(m=>m.id===id)){ showToast('⚠️ النموذج موجود مسبقاً'); return; }
+  const m = {id, name, desc: desc||'نموذج مخصص', badge:'مخصص', custom:true, steps_default:20, guidance_default:7.5};
+  APP.customModels.push(m);
+  localStorage.setItem('img_custom_models', JSON.stringify(APP.customModels));
+  closeModal('modal-add-model');
+  document.getElementById('new-id').value='';
+  document.getElementById('new-name').value='';
+  document.getElementById('new-desc').value='';
+  renderModels();
+  showToast('✅ تمت إضافة ' + name);
+}
+
+function removeCustomModel(id){
+  APP.customModels = APP.customModels.filter(m=>m.id!==id);
+  localStorage.setItem('img_custom_models', JSON.stringify(APP.customModels));
+  if(APP.selectedModel===id){ APP.selectedModel=BUILTIN_MODELS[0].id; localStorage.setItem('img_model',APP.selectedModel); }
+  renderModels();
+  showToast('🗑️ تم حذف النموذج');
+}
+
+function selectModel(id){
+  const m = allModels().find(x=>x.id===id);
+  APP.selectedModel = id;
+  localStorage.setItem('img_model', id);
+  if(m){ APP.steps = m.steps_default||20; APP.guidance = m.guidance_default||7.5; }
+  renderModels();
+  switchTab('generate');
+  showToast('✓ تم اختيار ' + (m?.name||id));
+}
+
+// =====================
+//  IMAGE GENERATION
+// =====================
+async function generate(){
+  if(!APP.prompt.trim()){ showToast('✏️ اكتب وصفاً للصورة'); return; }
+  if(!APP.key){ openKeyModal(); return; }
+
+  APP.generating = true;
+  renderGenerate();
+
+  try {
+    const body = {
+      inputs: APP.prompt,
+      parameters: {
+        negative_prompt: APP.negPrompt || undefined,
+        num_inference_steps: APP.steps,
+        guidance_scale: APP.guidance,
+        width: APP.width,
+        height: APP.height,
+      }
+    };
+    // Remove undefined values
+    if(!body.parameters.negative_prompt) delete body.parameters.negative_prompt;
+
+    const res = await fetch(
+      `https://api-inference.huggingface.co/models/${APP.selectedModel}`,
+      {
+        method:'POST',
+        headers:{
+          'Authorization': `Bearer ${APP.key}`,
+          'Content-Type':'application/json',
+          'Accept':'image/*',
+        },
+        body: JSON.stringify(body),
+      }
+    );
+
+    if(!res.ok){
+      const ct = res.headers.get('content-type')||'';
+      let msg = `خطأ ${res.status}`;
+      if(ct.includes('json')){
+        const j = await res.json().catch(()=>({}));
+        msg = j.error || msg;
+        if(res.status===503) msg = '⏳ النموذج يُحمَّل (Loading)، انتظر 30 ثانية وأعد المحاولة';
+        if(res.status===401) msg = '🔑 مفتاح API غير صحيح، تحقق منه';
+        if(res.status===402) msg = '💳 تجاوزت الحد المجاني الشهري';
+        if(res.status===429) msg = '⏱️ طلبات كثيرة، انتظر قليلاً';
+        if(res.status===422) msg = '⚠️ النموذج لا يدعم توليد الصور عبر API';
+      }
+      throw new Error(msg);
+    }
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+
+    // Convert to base64 for persistence
+    const reader = new FileReader();
+    reader.onload = () => {
+      const b64 = reader.result;
+      APP.lastImage = b64;
+      localStorage.setItem('img_last', b64);
+      const entry = {
+        prompt: APP.prompt,
+        model: getModel().name,
+        img: b64,
+        time: new Date().toLocaleString('ar')
+      };
+      APP.history = [entry, ...APP.history.slice(0,9)];
+      localStorage.setItem('img_history', JSON.stringify(APP.history));
+      APP.generating = false;
+      renderGenerate();
+    };
+    reader.readAsDataURL(blob);
+
+  } catch(e){
+    APP.generating = false;
+    APP.lastError = e.message;
+    renderGenerate();
+  }
+}
+
+function downloadImage(){
+  if(!APP.lastImage) return;
+  const a = document.createElement('a');
+  a.href = APP.lastImage;
+  a.download = `imageai-${Date.now()}.png`;
+  a.click();
+  showToast('⬇️ جاري التحميل...');
+}
+
+function shareImage(){
+  if(!APP.lastImage || !navigator.share) return;
+  fetch(APP.lastImage).then(r=>r.blob()).then(blob=>{
+    const file = new File([blob], 'imageai.png', {type:'image/png'});
+    navigator.share({title:'صورة من ImageAI', files:[file]}).catch(()=>{});
+  });
+}
+
+// =====================
+//  RENDER FUNCTIONS
+// =====================
+function renderHeader(){
+  const el = document.getElementById('header-status');
+  if(APP.key){
+    const type = detectKeyType(APP.key);
+    el.innerHTML=`<div class="badge badge-connected" onclick="openKeyModal()">
+      <div class="dot dot-green"></div>${type||'متصل'}
+    </div>`;
+  } else {
+    el.innerHTML=`<div class="badge badge-disconnected" onclick="openKeyModal()">
+      <div class="dot dot-red"></div>ربط API
+    </div>`;
+  }
+}
+
+function renderGenerate(){
+  const p = document.getElementById('page-generate');
+  const m = getModel();
+  const hasImg = !!APP.lastImage;
+  const err = APP.lastError;
+  if(err) setTimeout(()=>{ APP.lastError=''; },100);
+
+  p.innerHTML = `
+  <div class="slide-up">
+
+    <!-- API Key Banner (if not set) -->
+    ${!APP.key ? `
+    <div class="card" style="border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.05);margin-bottom:10px;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:24px;">🔑</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:var(--red)">مفتاح API مطلوب</div>
+        <div style="font-size:11px;color:var(--text3)">مجاني من huggingface.co</div>
+      </div>
+      <button class="btn btn-sm" onclick="openKeyModal()" style="background:rgba(248,113,113,.1);color:var(--red);border-color:rgba(248,113,113,.2)">إعداد</button>
+    </div>` : ''}
+
+    <!-- Selected Model -->
+    <div class="label" style="margin-bottom:6px"><span class="label-num">1</span> النموذج المختار</div>
+    <div class="card" style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:800;">${m.name}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${m.desc||''}</div>
+      </div>
+      <button class="btn btn-sm" onclick="switchTab('models')">تغيير</button>
+    </div>
+
+    <!-- Prompt -->
+    <div class="label"><span class="label-num">2</span> وصف الصورة (Prompt)</div>
+    <textarea class="inp" id="prompt-inp" rows="4"
+      placeholder="صِف الصورة التي تريدها بالتفصيل... مثال: غروب شمس فوق جبال خضراء، ألوان دافئة، أسلوب تصوير فوتوغرافي احترافي"
+      oninput="APP.prompt=this.value">${APP.prompt}</textarea>
+
+    <!-- Negative Prompt -->
+    <div class="label" style="margin-top:10px"><span class="label-num">3</span> وصف سلبي (اختياري)</div>
+    <input class="inp" id="neg-inp" type="text"
+      placeholder="ما لا تريده... مثال: ضبابي، مشوّه، جودة منخفضة"
+      value="${APP.negPrompt}"
+      oninput="APP.negPrompt=this.value"/>
+
+    <!-- Settings Row -->
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <div class="card" style="flex:1;padding:12px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px;display:flex;justify-content:space-between">
+          <span>الخطوات</span><strong style="color:var(--accent)">${APP.steps}</strong>
+        </div>
+        <input type="range" min="1" max="50" value="${APP.steps}" oninput="APP.steps=+this.value;document.getElementById('steps-val').textContent=this.value" id="steps-range"/>
+        <div class="progress-bar"><div class="progress-fill" id="steps-val-bar" style="width:${APP.steps/50*100}%"></div></div>
+      </div>
+      <div class="card" style="flex:1;padding:12px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px;display:flex;justify-content:space-between">
+          <span>التوجيه</span><strong style="color:var(--accent)">${APP.guidance}</strong>
+        </div>
+        <input type="range" min="0" max="20" step="0.5" value="${APP.guidance}" oninput="APP.guidance=+this.value;document.getElementById('guid-val').textContent=this.value" id="guid-range"/>
+        <div class="progress-bar"><div class="progress-fill" style="width:${APP.guidance/20*100}%"></div></div>
+      </div>
+    </div>
+
+    <!-- Size -->
+    <div class="label" style="margin-top:10px"><span class="label-num">4</span> حجم الصورة</div>
+    <div style="display:flex;gap:6px;margin-bottom:10px">
+      ${[['512×512','512','512'],['768×512','768','512'],['512×768','512','768'],['1024×1024','1024','1024']].map(([label,w,h])=>`
+      <button class="btn btn-sm" onclick="APP.width=${w};APP.height=${h};renderGenerate()"
+        style="${APP.width==w&&APP.height==h?'background:rgba(79,142,247,.15);border-color:rgba(79,142,247,.4);color:var(--accent)':''}">
+        ${label}
+      </button>`).join('')}
+    </div>
+
+    <!-- Generate Button -->
+    <button class="btn btn-primary" id="gen-btn" onclick="generate()" ${APP.generating?'disabled':''} style="margin-bottom:12px">
+      ${APP.generating
+        ? `<span class="pulse">⏳</span> جارٍ التوليد...`
+        : '🎨 توليد الصورة'}
+    </button>
+
+    <!-- Error -->
+    ${err ? `
+    <div class="info-box" style="background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2);color:#fca5a5;margin-bottom:10px">
+      ❌ ${err}
+    </div>` : ''}
+
+    <!-- Image Display -->
+    <div class="label"><span class="label-num">5</span> الصورة الناتجة</div>
+    <div class="img-wrap" id="img-box">
+      ${APP.generating
+        ? `<div class="skeleton" style="position:absolute;inset:0;border-radius:14px"></div>
+           <div class="generating-state">
+             <div class="gen-icon">🎨</div>
+             <div class="gen-text">جارٍ إنشاء الصورة...</div>
+             <div class="gen-sub">${m.name}</div>
+           </div>`
+        : hasImg
+          ? `<img src="${APP.lastImage}" alt="صورة مولّدة" loading="lazy"/>`
+          : `<div class="img-placeholder">
+               <div class="icon">🖼️</div>
+               <p>اكتب وصفاً واضغط<br><strong>توليد الصورة</strong></p>
+             </div>`
+      }
+    </div>
+
+    ${hasImg && !APP.generating ? `
+    <div class="img-actions">
+      <button class="btn btn-primary" onclick="downloadImage()" style="flex:1">⬇️ تحميل الصورة</button>
+      ${navigator.share ? `<button class="btn btn-sm" onclick="shareImage()" style="padding:14px">📤</button>` : ''}
+    </div>
+    <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:6px">
+      الصورة محفوظة تلقائياً على جهازك
+    </div>` : ''}
+
+  </div>`;
+
+  // Re-attach range listeners properly
+  const stepsR = document.getElementById('steps-range');
+  const guidR = document.getElementById('guid-range');
+  if(stepsR){
+    stepsR.oninput = function(){
+      APP.steps = +this.value;
+      const sv = document.querySelector('[data-steps-label]');
+      // Update display inline
+      this.closest('.card').querySelector('strong').textContent = this.value;
+    };
+  }
+}
+
+function renderModels(){
+  const p = document.getElementById('page-models');
+  const models = allModels();
+  p.innerHTML = `
+  <div class="slide-up">
+    <div class="info-blue" style="margin-bottom:12px;font-size:12px">
+      🔗 جميع النماذج المدمجة <strong>مجانية تماماً</strong> عبر Hugging Face Inference API. اضغط على النموذج لتحديده.
+    </div>
+
+    <button class="btn btn-primary" onclick="document.getElementById('modal-add-model').style.display='flex'" style="margin-bottom:14px">
+      ➕ إضافة نموذج مخصص
+    </button>
+
+    <div class="label">النماذج المتاحة (${models.length})</div>
+    <div class="model-list">
+      ${models.map(m=>`
+      <div class="model-chip ${APP.selectedModel===m.id?'selected':''}" onclick="selectModel('${m.id}')">
+        <div style="font-size:22px">${m.custom?'⚙️':'🤖'}</div>
+        <div class="model-chip-info">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span class="model-chip-name">${m.name}</span>
+            <span class="model-chip-badge ${m.custom?'custom':''}">${m.badge||'مجاني'}</span>
+            ${APP.selectedModel===m.id?'<span style="font-size:10px;color:var(--accent)">✓ محدد</span>':''}
+          </div>
+          <div class="model-chip-desc">${m.desc||''}</div>
+          <div class="model-chip-id">${m.id}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+          ${m.link?`<a href="${m.link}" target="_blank" onclick="event.stopPropagation()" class="btn btn-sm" style="padding:5px 8px;font-size:11px;">🔗</a>`:''}
+          ${m.custom?`<button class="btn btn-danger" onclick="event.stopPropagation();removeCustomModel('${m.id}')">حذف</button>`:''}
+        </div>
+      </div>`).join('')}
+    </div>
+
+    <div class="info-yellow" style="margin-top:14px;font-size:12px">
+      💡 <strong>نصيحة:</strong> إذا ظهر خطأ 503، النموذج يُحمَّل للمرة الأولى — انتظر 30-60 ثانية وأعد المحاولة. هذا طبيعي تماماً في الطبقة المجانية.
+    </div>
+  </div>`;
+}
+
+function renderGuide(){
+  const p = document.getElementById('page-guide');
+  p.innerHTML = `
+  <div class="slide-up">
+
+    <!-- PWA Install -->
+    ${APP.installPrompt ? `
+    <div class="card" style="border-color:rgba(79,142,247,.3);background:rgba(79,142,247,.05);margin-bottom:12px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:28px">📲</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:800;color:var(--accent)">ثبّت التطبيق على هاتفك</div>
+        <div style="font-size:11px;color:var(--text3)">يعمل بدون إنترنت بعد التثبيت</div>
+      </div>
+      <button class="btn btn-primary" style="width:auto;padding:9px 14px;font-size:12px" onclick="APP.installPrompt.prompt()">تثبيت</button>
+    </div>` : ''}
+
+    <!-- Get API Key -->
+    <div class="label">🔑 الحصول على مفتاح API المجاني</div>
+    <div class="card" style="margin-bottom:10px">
+      <div class="steps">
+        <div class="step">
+          <div class="step-line"><div class="step-dot">1</div><div class="step-connector"></div></div>
+          <div class="step-content">
+            <div class="step-title">إنشاء حساب مجاني</div>
+            <div class="step-desc"><a href="https://huggingface.co/join" target="_blank" style="color:var(--accent)">huggingface.co/join</a> — التسجيل مجاني ولا يحتاج بطاقة بنكية</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-line"><div class="step-dot">2</div><div class="step-connector"></div></div>
+          <div class="step-content">
+            <div class="step-title">إنشاء مفتاح API</div>
+            <div class="step-desc"><a href="https://huggingface.co/settings/tokens" target="_blank" style="color:var(--accent)">huggingface.co/settings/tokens</a><br>← New token ← Read ← انسخ المفتاح</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-line"><div class="step-dot">3</div></div>
+          <div class="step-content">
+            <div class="step-title">إدخاله في التطبيق</div>
+            <div class="step-desc">اضغط على <strong>"ربط API"</strong> في الأعلى والصق المفتاح</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Free Tier Limits -->
+    <div class="label">⚡ حدود الطبقة المجانية</div>
+    <div class="info-yellow" style="margin-bottom:10px">
+      الحساب المجاني يتيح عدد محدود من الصور شهرياً. إذا ظهر خطأ <strong>402</strong> فقد استنفذت الرصيد المجاني هذا الشهر — يجدد تلقائياً.
+    </div>
+
+    <!-- Prompt Tips -->
+    <div class="label">✍️ نصائح كتابة الوصف</div>
+    <div class="card" style="margin-bottom:10px">
+      ${[
+        ['🌟','كن تفصيلياً','اذكر الألوان والإضاءة والأسلوب: "غروب شمس ذهبي، أضواء ناعمة، أسلوب سينمائي"'],
+        ['🎨','حدد الأسلوب','photorealistic, digital art, watercolor, anime, oil painting...'],
+        ['📷','أضف جودة الصورة','4K, highly detailed, sharp focus, award winning photography'],
+        ['❌','استخدم الوصف السلبي','اكتب ما لا تريده: blurry, low quality, deformed, ugly'],
+        ['🔁','جرب عدة مرات','نفس الوصف قد يعطي نتائج مختلفة في كل مرة'],
+      ].map(([ico,t,d])=>`
+      <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);${d===''?'border:none':''}">
+        <span style="font-size:18px">${ico}</span>
+        <div><div style="font-size:13px;font-weight:700">${t}</div><div style="font-size:12px;color:var(--text2);margin-top:2px">${d}</div></div>
+      </div>`).join('')}
+    </div>
+
+    <!-- Error Guide -->
+    <div class="label">🛠️ حل المشاكل الشائعة</div>
+    <div class="card">
+      ${[
+        ['503 Loading','النموذج يُحمَّل — انتظر 30-60 ثانية وأعد المحاولة'],
+        ['401 Unauthorized','مفتاح API غير صحيح — تحقق منه'],
+        ['402 Payment','تجاوزت الحد المجاني الشهري'],
+        ['429 Too Many Requests','انتظر دقيقة وأعد المحاولة'],
+        ['422 Unprocessable','النموذج لا يدعم API — اختر نموذجاً آخر'],
+      ].map(([code,sol])=>`
+      <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+        <code style="font-family:var(--mono);font-size:10px;background:var(--bg2);padding:2px 6px;border-radius:4px;color:var(--gold);white-space:nowrap;align-self:flex-start;margin-top:2px">${code}</code>
+        <div style="font-size:12px;color:var(--text2)">${sol}</div>
+      </div>`).join('')}
+    </div>
+
+    <!-- Vercel Deploy -->
+    <div class="label" style="margin-top:12px">🚀 نشر التطبيق على Vercel مجاناً</div>
+    <div class="card">
+      <div class="steps">
+        ${[
+          ['GitHub','ارفع الملفات على <a href="https://github.com" target="_blank" style="color:var(--accent)">github.com</a> في Repository جديد'],
+          ['Vercel','افتح <a href="https://vercel.com" target="_blank" style="color:var(--accent)">vercel.com</a> ← Import Project ← اختر الـ Repo'],
+          ['Deploy','اضغط Deploy — ينتهي في 30 ثانية وتحصل على رابط عام'],
+          ['PWA','افتح الرابط من هاتفك ← Chrome: "Install App" ← Safari: "Add to Home Screen"'],
+        ].map(([t,d],i)=>`
+        <div class="step">
+          <div class="step-line"><div class="step-dot">${i+1}</div>${i<3?'<div class="step-connector"></div>':''}</div>
+          <div class="step-content"><div class="step-title">${t}</div><div class="step-desc">${d}</div></div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <div style="height:10px"></div>
+  </div>`;
+}
+
+// =====================
+//  TABS
+// =====================
+function switchTab(tab){
+  APP.tab = tab;
+  ['generate','models','guide'].forEach(t=>{
+    document.getElementById(`page-${t}`).style.display = t===tab?'block':'none';
+    document.getElementById(`nav-${t}`).classList.toggle('active', t===tab);
+  });
+  if(tab==='generate') renderGenerate();
+  if(tab==='models') renderModels();
+  if(tab==='guide') renderGuide();
+}
+
+// =====================
+//  MODAL
+// =====================
+function closeModal(id){ document.getElementById(id).style.display='none'; }
+
+// =====================
+//  TOAST
+// =====================
+let toastTimer;
+function showToast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 2500);
+}
+
+// =====================
+//  SERVICE WORKER
+// =====================
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+
+// =====================
+//  BOOT
+// =====================
+renderHeader();
+switchTab('generate');
+</script>
+</body>
+</html>
